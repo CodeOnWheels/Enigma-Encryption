@@ -1,3 +1,5 @@
+"""Educational character-shift demo; not suitable for protecting sensitive data."""
+
 import random
 
 # Alpha numeric list I am using to iterate through the alphabet
@@ -6,20 +8,23 @@ alphaNumericList = [' ', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 
                     '!', '"', '#', '$', '%', '&', "'", '(', ')', '*', '+', ',', '-', '.', '/', ':', ';', '<', '=', '>', '?', '@', '[', '\\', ']', '^', '_', '`', '{', '|', '}', '~',
                     '0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
 
+# Padding cannot contain the frame marker or merge with its boundaries.
+noiseAlphabet = [char for char in alphaNumericList if char != '#']
+
 # Encrypt and Decrypt
 def encrypt(string, initWheel = 1, initIncrement = 1):
   inString = ""
 
   # Inserting the randomness
   for i in range(random.randint(1, random.randint(1, 100))):
-    inString += random.choice(alphaNumericList)
+    inString += random.choice(noiseAlphabet)
 
   # Inserting delimiter
   inString += "###" + string + "###"
 
   # Inserting the randomness
   for i in range(random.randint(1, random.randint(1, 100))):
-    inString += random.choice(alphaNumericList)
+    inString += random.choice(noiseAlphabet)
 
   # Actual encryption
   wheel = initWheel
@@ -52,15 +57,23 @@ def decrypt(string, initWheel = 1, initIncrement = 1):
       retVal += char
 
   # Delimiter
-  return retVal.split("###")[1]
+  start = retVal.find("###")
+  end = retVal.rfind("###")
+  if start == -1 or end < start + 3:
+    raise ValueError("Ciphertext does not contain a complete message frame")
+  return retVal[start + 3:end]
 
 # Recursive encryption and decryption
 def stackEncrypt(string, iterations, initWheel = 1, initIncrement = 1):
+  if not isinstance(iterations, int) or isinstance(iterations, bool) or iterations < 0:
+    raise ValueError("iterations must be a non-negative integer")
   for i in range(iterations):
     string = encrypt(string, initWheel, initIncrement)
   return string
 
 def stackDecrypt(string, iterations, initWheel = 1, initIncrement = 1):
+  if not isinstance(iterations, int) or isinstance(iterations, bool) or iterations < 0:
+    raise ValueError("iterations must be a non-negative integer")
   for i in range(iterations):
     string = decrypt(string, initWheel, initIncrement)
   return string
@@ -68,15 +81,15 @@ def stackDecrypt(string, iterations, initWheel = 1, initIncrement = 1):
 # Debugging and Testing
 def runTests(string, initWheel = 1, initIncrement = 1):
   testString = string
-  initWheel = initWheel
-  initIncrement = initIncrement
 
   print("Initial:   "  + testString)
 
-  testString = stackEncrypt(testString, 1)
+  testString = stackEncrypt(testString, 1, initWheel, initIncrement)
   print("Encrypted: " + testString)
 
-  testString = stackDecrypt(testString, 1)
+  testString = stackDecrypt(testString, 1, initWheel, initIncrement)
   print("Decrypted: " + testString + "\n")
 
-runTests(" ")
+if __name__ == "__main__":
+  runTests("Hello, robotics!")
+
